@@ -1,0 +1,28 @@
+version: '3.6'
+
+services:
+  data-server:
+    image: 'postgres:13.1-alpine'
+    container_name: data-server
+    ports:
+      - "8000:5432"
+    environment:
+      - POSTGRES_USER=sa
+      - POSTGRES_PASSWORD=abc123
+      - POSTGRES_DB=quizengine
+
+  quiz-engine:
+    image: 'quiz-engine:latest'
+    build:
+      context: ./..
+      dockerfile: docker/Dockerfile
+    ports:
+        - "8080:8080"
+    container_name: quiz-engine
+    depends_on:
+        - data-server
+    environment:
+        - SPRING_DATASOURCE_URL=jdbc:postgresql://data-server:5432/quizengine
+        - SPRING_DATASOURCE_USERNAME=sa
+        - SPRING_DATASOURCE_PASSWORD=abc123
+        - SPRING_JPA_HIBERNATE_DDL_AUTO=update
