@@ -41,8 +41,11 @@ public class QuizController {
     }
 
     @PostMapping(value = {"/addQuestion"})
-    public ResponseEntity<Question> addQuestion(@RequestBody QuestionDTO questionDTO) throws Exception {
+    public ResponseEntity<Question> addQuestion(@AuthenticationPrincipal User user, @RequestBody QuestionDTO questionDTO) throws Exception {
         Quiz quiz = this.quizService.getQuiz(questionDTO.getQuizId());
+        if (quiz.getUserId() != user.getId()) {
+            return new ResponseEntity<>(null, HttpStatus.FORBIDDEN);
+        }
         quiz.setStatus(QuizStatus.MODIFIED);
 
         Question question = Question.builder()
@@ -70,12 +73,23 @@ public class QuizController {
         return new ResponseEntity<>(question, HttpStatus.CREATED);
     }
 
-    @GetMapping(value ={"/{id}"})
+    @GetMapping(value = {"/{id}"})
     public ResponseEntity<Quiz> getQuiz(@AuthenticationPrincipal User user, @PathVariable Long id) throws Exception {
-        Quiz quiz = quizService.getQuiz(id);
+        Quiz quiz = this.quizService.getQuiz(id);
         if (quiz.getStatus() != QuizStatus.PUBLISHED && user.getId() != quiz.getUserId()) {
             return new ResponseEntity<>(null, HttpStatus.FORBIDDEN);
         }
+        return new ResponseEntity<>(quiz, HttpStatus.OK);
+    }
+
+    @PostMapping(value = {"/publish/{id}"})
+    public ResponseEntity<Quiz> publish(@AuthenticationPrincipal User user, @PathVariable Long id) throws Exception {
+        Quiz quiz = this.quizService.getQuiz(id);
+        if (user.getId() != quiz.getUserId()) {
+            return new ResponseEntity<>(null, HttpStatus.FORBIDDEN);
+        }
+        quiz.setStatus(QuizStatus.PUBLISHED);
+        quiz = this.quizService.update(quiz);
         return new ResponseEntity<>(quiz, HttpStatus.OK);
     }
 }
