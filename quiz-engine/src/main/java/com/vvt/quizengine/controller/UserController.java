@@ -1,6 +1,6 @@
 package com.vvt.quizengine.controller;
 
-import com.vvt.quizengine.dto.UserDto;
+import com.vvt.quizengine.dto.UserDTO;
 import com.vvt.quizengine.jwtutils.TokenManager;
 import com.vvt.quizengine.jwtutils.Token;
 import com.vvt.quizengine.model.User;
@@ -49,7 +49,7 @@ public class UserController {
     }
 
     @PostMapping(path = "/login")
-    public ResponseEntity<Token> login(@RequestBody UserDto userDto) throws Exception {
+    public ResponseEntity<Token> login(@RequestBody UserDTO userDto) throws Exception {
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(userDto.getEmail(), userDto.getPassword())
@@ -67,7 +67,7 @@ public class UserController {
     }
 
     @PostMapping(path = "/register")
-    public ResponseEntity<Token> register(@RequestBody UserDto userDto) {
+    public ResponseEntity<Token> register(@RequestBody UserDTO userDto) {
         User user = User.builder()
                 .email(userDto.getEmail())
                 .password(passwordEncoder.encode(userDto.getPassword()))

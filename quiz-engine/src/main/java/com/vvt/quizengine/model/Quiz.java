@@ -39,4 +39,8 @@ public class Quiz {
         this.status = status;
         this.title = title;
     }
+
+    public void addQuestion(Question question) {
+        this.questions.add(question);
+    }
 }

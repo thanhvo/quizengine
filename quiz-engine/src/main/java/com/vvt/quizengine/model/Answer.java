@@ -1,5 +1,6 @@
 package com.vvt.quizengine.model;
 
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -21,5 +22,12 @@ public class Answer {
     private String value;
 
     private Boolean correct;
+
+    @Builder
+    public Answer(Long questionId, String value, Boolean correct) {
+        this.questionId = questionId;
+        this.value = value;
+        this.correct = correct;
+    }
 
 }

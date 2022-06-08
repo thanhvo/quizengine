@@ -5,12 +5,12 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Setter @Getter @NoArgsConstructor
-public class UserDto {
+public class UserDTO {
     private Long id;
     private String email;
     private String password;
 
-    public UserDto(String email, String password) {
+    public UserDTO(String email, String password) {
         this.email = email;
         this.password = password;
     }

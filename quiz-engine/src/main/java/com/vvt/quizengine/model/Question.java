@@ -1,5 +1,6 @@
 package com.vvt.quizengine.model;
 
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -26,4 +27,11 @@ public class Question {
 
     @OneToMany(mappedBy = "questionId")
     private List<Answer> answers;
+
+    @Builder
+    public Question(Long quizId, String text, QuestionType type) {
+        this.quizId = quizId;
+        this.text = text;
+        this.type = type;
+    }
 }
