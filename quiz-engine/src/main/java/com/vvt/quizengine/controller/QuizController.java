@@ -3,6 +3,7 @@ package com.vvt.quizengine.controller;
 import com.vvt.quizengine.dto.AnswerDTO;
 import com.vvt.quizengine.dto.QuestionDTO;
 import com.vvt.quizengine.dto.QuizDTO;
+import com.vvt.quizengine.exception.ApiError;
 import com.vvt.quizengine.model.Answer;
 import com.vvt.quizengine.model.Question;
 import com.vvt.quizengine.model.Quiz;
@@ -41,10 +42,14 @@ public class QuizController {
     }
 
     @PostMapping(value = {"/addQuestion"})
-    public ResponseEntity<Question> addQuestion(@AuthenticationPrincipal User user, @RequestBody QuestionDTO questionDTO) throws Exception {
+    public ResponseEntity<Object> addQuestion(@AuthenticationPrincipal User user, @RequestBody QuestionDTO questionDTO) throws Exception {
         Quiz quiz = this.quizService.getQuiz(questionDTO.getQuizId());
         if (quiz.getUserId() != user.getId()) {
-            return new ResponseEntity<>(null, HttpStatus.FORBIDDEN);
+            ApiError error = new ApiError(HttpStatus.FORBIDDEN, "Can not modify the quiz which the user does not own.");
+            return new ResponseEntity<Object>(error, error.getStatus());
+        } else if (quiz.getStatus() == QuizStatus.PUBLISHED) {
+            ApiError error = new ApiError(HttpStatus.FORBIDDEN, "Can not modify the quiz which is already published.");
+            return new ResponseEntity<Object>(error, error.getStatus());
         }
         quiz.setStatus(QuizStatus.MODIFIED);
 
@@ -74,19 +79,21 @@ public class QuizController {
     }
 
     @GetMapping(value = {"/{id}"})
-    public ResponseEntity<Quiz> getQuiz(@AuthenticationPrincipal User user, @PathVariable Long id) throws Exception {
+    public ResponseEntity<Object> getQuiz(@AuthenticationPrincipal User user, @PathVariable Long id) throws Exception {
         Quiz quiz = this.quizService.getQuiz(id);
         if (quiz.getStatus() != QuizStatus.PUBLISHED && user.getId() != quiz.getUserId()) {
-            return new ResponseEntity<>(null, HttpStatus.FORBIDDEN);
+            ApiError error = new ApiError(HttpStatus.FORBIDDEN, "Can not take the quiz which is not published.");
+            return new ResponseEntity<Object>(error, error.getStatus());
         }
         return new ResponseEntity<>(quiz, HttpStatus.OK);
     }
 
     @PostMapping(value = {"/publish/{id}"})
-    public ResponseEntity<Quiz> publish(@AuthenticationPrincipal User user, @PathVariable Long id) throws Exception {
+    public ResponseEntity<Object> publish(@AuthenticationPrincipal User user, @PathVariable Long id) throws Exception {
         Quiz quiz = this.quizService.getQuiz(id);
         if (user.getId() != quiz.getUserId()) {
-            return new ResponseEntity<>(null, HttpStatus.FORBIDDEN);
+            ApiError error = new ApiError(HttpStatus.FORBIDDEN, "Can not publish another user's quiz.");
+            return new ResponseEntity<Object>(error, error.getStatus());
         }
         quiz.setStatus(QuizStatus.PUBLISHED);
         quiz = this.quizService.update(quiz);
