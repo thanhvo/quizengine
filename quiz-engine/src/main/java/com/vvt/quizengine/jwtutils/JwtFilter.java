@@ -19,8 +19,10 @@ import io.jsonwebtoken.ExpiredJwtException;
 public class JwtFilter extends OncePerRequestFilter {
     @Autowired
     private UserDetailsService userDetailsService;
+
     @Autowired
     private TokenManager tokenManager;
+
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response, FilterChain filterChain)
@@ -41,7 +43,7 @@ public class JwtFilter extends OncePerRequestFilter {
         } else {
             System.out.println("Bearer String not found in token");
         }
-        if (null != username &&SecurityContextHolder.getContext().getAuthentication() == null) {
+        if (null != username && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
             if (tokenManager.validateJwtToken(token, userDetails)) {
                 UsernamePasswordAuthenticationToken
