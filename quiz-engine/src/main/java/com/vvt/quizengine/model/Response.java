@@ -1,5 +1,6 @@
 package com.vvt.quizengine.model;
 
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -21,9 +22,16 @@ public class Response {
 
     private Long solutionId;
 
-    private Long answerId;
+    private List<Long> answerIds;
 
-    public Double getScore() {
-        return 0.0;
+    private Double score;
+
+    @Builder
+    public Response(Long questionId, Long solutionId, List<Long> answerIds, Double score) {
+        this.questionId = questionId;
+        this.solutionId = solutionId;
+        this.answerIds = answerIds;
+        this.score = score;
     }
+
 }

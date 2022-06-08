@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -42,8 +43,14 @@ public class QuizController {
     }
 
     @PostMapping(value = {"/addQuestion"})
-    public ResponseEntity<Object> addQuestion(@AuthenticationPrincipal User user, @RequestBody QuestionDTO questionDTO) throws Exception {
-        Quiz quiz = this.quizService.getQuiz(questionDTO.getQuizId());
+    public ResponseEntity<Object> addQuestion(@AuthenticationPrincipal User user, @RequestBody QuestionDTO questionDTO) {
+        Quiz quiz = null;
+        try {
+            quiz = this.quizService.getQuiz(questionDTO.getQuizId());
+        } catch (Exception e) {
+            ApiError error = new ApiError(HttpStatus.BAD_REQUEST, "Can not find the quiz.");
+            return new ResponseEntity<>(error, error.getStatus());
+        }
         if (quiz.getUserId() != user.getId()) {
             ApiError error = new ApiError(HttpStatus.FORBIDDEN, "Can not modify the quiz which the user does not own.");
             return new ResponseEntity<Object>(error, error.getStatus());
@@ -79,8 +86,14 @@ public class QuizController {
     }
 
     @GetMapping(value = {"/{id}"})
-    public ResponseEntity<Object> getQuiz(@AuthenticationPrincipal User user, @PathVariable Long id) throws Exception {
-        Quiz quiz = this.quizService.getQuiz(id);
+    public ResponseEntity<Object> getQuiz(@AuthenticationPrincipal User user, @PathVariable Long id) {
+        Quiz quiz = null;
+        try {
+            quiz = this.quizService.getQuiz(id);
+        } catch (Exception e) {
+            ApiError error = new ApiError(HttpStatus.BAD_REQUEST, "Can not find the quiz.");
+            return new ResponseEntity<>(error, error.getStatus());
+        }
         if (quiz.getStatus() != QuizStatus.PUBLISHED && user.getId() != quiz.getUserId()) {
             ApiError error = new ApiError(HttpStatus.FORBIDDEN, "Can not take the quiz which is not published.");
             return new ResponseEntity<Object>(error, error.getStatus());
@@ -89,8 +102,14 @@ public class QuizController {
     }
 
     @PostMapping(value = {"/publish/{id}"})
-    public ResponseEntity<Object> publish(@AuthenticationPrincipal User user, @PathVariable Long id) throws Exception {
-        Quiz quiz = this.quizService.getQuiz(id);
+    public ResponseEntity<Object> publish(@AuthenticationPrincipal User user, @PathVariable Long id) {
+        Quiz quiz = null;
+        try {
+            quiz = this.quizService.getQuiz(id);
+        } catch (Exception e) {
+            ApiError error = new ApiError(HttpStatus.BAD_REQUEST, "Can not find the quiz.");
+            return new ResponseEntity<>(error, error.getStatus());
+        }
         if (user.getId() != quiz.getUserId()) {
             ApiError error = new ApiError(HttpStatus.FORBIDDEN, "Can not publish another user's quiz.");
             return new ResponseEntity<Object>(error, error.getStatus());
@@ -98,5 +117,23 @@ public class QuizController {
         quiz.setStatus(QuizStatus.PUBLISHED);
         quiz = this.quizService.update(quiz);
         return new ResponseEntity<>(quiz, HttpStatus.OK);
+    }
+
+    @DeleteMapping(value = {"/{id}"})
+    public ResponseEntity<Object> delete(@AuthenticationPrincipal User user, @PathVariable Long id) {
+        Quiz quiz = null;
+        try {
+            quiz = this.quizService.getQuiz(id);
+        } catch (Exception e) {
+            ApiError error = new ApiError(HttpStatus.BAD_REQUEST, "Can not find the quiz.");
+            return new ResponseEntity<>(error, error.getStatus());
+        }
+        if (user.getId() != quiz.getUserId()) {
+            ApiError error = new ApiError(HttpStatus.FORBIDDEN, "Can not delete another user's quiz.");
+            return new ResponseEntity<Object>(error, error.getStatus());
+        }
+
+        this.quizService.deleteQuiz(id);
+        return new ResponseEntity<>(id, HttpStatus.OK);
     }
 }

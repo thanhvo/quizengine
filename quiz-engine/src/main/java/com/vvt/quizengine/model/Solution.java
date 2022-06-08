@@ -1,5 +1,6 @@
 package com.vvt.quizengine.model;
 
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -22,10 +23,16 @@ public class Solution {
 
     private Long quizId;
 
+    private Double totalScore;
+
     @OneToMany(mappedBy = "solutionId")
     private List<Response> reponses;
 
-    public Double getScore() {
-        return 0.0;
+    @Builder
+    public Solution(Long userId, Long quizId, Double totalScore) {
+        this.userId = userId;
+        this.quizId = quizId;
+        this.totalScore = totalScore;
     }
+
 }
