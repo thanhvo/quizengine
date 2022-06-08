@@ -13,6 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -66,5 +68,14 @@ public class QuizController {
         this.quizService.update(quiz);
 
         return new ResponseEntity<>(question, HttpStatus.CREATED);
+    }
+
+    @GetMapping(value ={"/{id}"})
+    public ResponseEntity<Quiz> getQuiz(@AuthenticationPrincipal User user, @PathVariable Long id) throws Exception {
+        Quiz quiz = quizService.getQuiz(id);
+        if (quiz.getStatus() != QuizStatus.PUBLISHED && user.getId() != quiz.getUserId()) {
+            return new ResponseEntity<>(null, HttpStatus.FORBIDDEN);
+        }
+        return new ResponseEntity<>(quiz, HttpStatus.OK);
     }
 }
