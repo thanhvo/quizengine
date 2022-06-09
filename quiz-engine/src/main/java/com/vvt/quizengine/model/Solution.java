@@ -23,13 +23,13 @@ public class Solution {
 
     private Long quizId;
 
-    private Double totalScore;
+    private Integer totalScore;
 
     @OneToMany(mappedBy = "solutionId")
     private List<Response> reponses;
 
     @Builder
-    public Solution(Long userId, Long quizId, Double totalScore) {
+    public Solution(Long userId, Long quizId, Integer totalScore) {
         this.userId = userId;
         this.quizId = quizId;
         this.totalScore = totalScore;

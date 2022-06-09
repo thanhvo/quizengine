@@ -8,6 +8,8 @@ import com.vvt.quizengine.model.Solution;
 import com.vvt.quizengine.model.User;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
+import java.util.List;
+
 public interface QuizService {
     public Quiz getQuiz(long id) throws Exception;
 
@@ -26,4 +28,8 @@ public interface QuizService {
     public Double caculateScore(Response response) throws Exception;
 
     public Long getQuestions(Long quizId);
+
+    public List<Solution> getSolutions(Long userId);
+
+    public List<Solution> getSolutionsByQuizId(Long quizId);
 }

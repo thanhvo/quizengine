@@ -28,11 +28,14 @@ public class Response {
     @Convert(converter = ListToStringConverter.class)
     private List<Long> answerIds;
 
+    private Double score;
+
     @Builder
-    public Response(Long questionId, Long solutionId, List<Long> answerIds) {
+    public Response(Long questionId, Long solutionId, List<Long> answerIds, Double score) {
         this.questionId = questionId;
         this.solutionId = solutionId;
         this.answerIds = answerIds;
+        this.score = score;
     }
 
 }

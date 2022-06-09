@@ -13,6 +13,8 @@ import com.vvt.quizengine.repository.SolutionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class QuizServiceImpl implements QuizService{
     @Autowired
@@ -96,5 +98,16 @@ public class QuizServiceImpl implements QuizService{
     public Long getQuestions(Long quizId) {
         return questionRepository.getQuestions(quizId);
     }
+
+    @Override
+    public List<Solution> getSolutions(Long userId) {
+        return solutionRepository.getSolutions(userId);
+    }
+
+    @Override
+    public List<Solution> getSolutionsByQuizId(Long quizId) {
+        return solutionRepository.getSolutionsByQuizId(quizId);
+    }
+
 
 }

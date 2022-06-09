@@ -15,6 +15,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -71,13 +73,37 @@ public class SolutionController {
             }
             subScores.add(score);
             totalScore += score;
+            response.setScore(score);
             response = this.quizService.update(response);
             responses.add(response);
         }
-        solution.setTotalScore(totalScore);
-        this.quizService.update(solution);
+
         int percentage = (int)(totalScore / this.quizService.getQuestions(quiz.getId()) * 100);
+        solution.setTotalScore(percentage);
+        this.quizService.update(solution);
         ScoreDTO scoreDto = new ScoreDTO(percentage + "%", subScores);
         return new ResponseEntity<>(scoreDto, HttpStatus.CREATED);
+    }
+
+    @GetMapping(value = {"", "/"})
+    public Iterable<Solution> getSolutions(@AuthenticationPrincipal User user) {
+        return this.quizService.getSolutions(user.getId());
+    }
+
+    @GetMapping(value = {"/byQuiz/{id}"})
+    public ResponseEntity<Object> getSolutionsByQuizId(@AuthenticationPrincipal User user, @PathVariable Long id) {
+        Quiz quiz = null;
+        try {
+            quiz = this.quizService.getQuiz(id);
+        } catch (Exception e) {
+            ApiError error = new ApiError(HttpStatus.BAD_REQUEST, "Can not the quiz.");
+            return new ResponseEntity<>(error, error.getStatus());
+        }
+        if (user.getId() != quiz.getUserId()) {
+            ApiError error = new ApiError(HttpStatus.FORBIDDEN, "Can not access the solution of the quiz owned by other.");
+            return new ResponseEntity<>(error, error.getStatus());
+        }
+        List<Solution> solutions = this.quizService.getSolutionsByQuizId(id);
+        return new ResponseEntity<>(solutions, HttpStatus.OK);
     }
 }
