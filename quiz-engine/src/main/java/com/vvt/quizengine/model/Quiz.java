@@ -26,6 +26,8 @@ public class Quiz {
 
     private Long userId;
 
+    private String encodedUrl;
+
     @OneToMany(mappedBy = "quizId")
     private List<Question> questions;
 

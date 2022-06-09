@@ -1,6 +1,5 @@
 package com.vvt.quizengine.controller;
 
-import com.vvt.quizengine.dto.QuizDTO;
 import com.vvt.quizengine.dto.ResponseDTO;
 import com.vvt.quizengine.dto.ScoreDTO;
 import com.vvt.quizengine.dto.SolutionDTO;
@@ -11,6 +10,7 @@ import com.vvt.quizengine.model.Response;
 import com.vvt.quizengine.model.Solution;
 import com.vvt.quizengine.model.User;
 import com.vvt.quizengine.service.QuizService;
+import com.vvt.quizengine.utils.URLEncoder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,16 +23,17 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/solutions")
 public class SolutionController {
 
     @Autowired
-    QuizService quizService;
+    private QuizService quizService;
+
+    @Autowired
+    private URLEncoder urlEncoder;
 
     @PostMapping(value = {""})
     public ResponseEntity<Object> create(@AuthenticationPrincipal User user, @RequestBody SolutionDTO solutionDTO) {
@@ -90,13 +91,15 @@ public class SolutionController {
         return this.quizService.getSolutions(user.getId());
     }
 
-    @GetMapping(value = {"/byQuiz/{id}"})
-    public ResponseEntity<Object> getSolutionsByQuizId(@AuthenticationPrincipal User user, @PathVariable Long id) {
+    @GetMapping(value = {"/byQuiz/{encodedUrl}"})
+    public ResponseEntity<Object> getSolutionsByQuizId(@AuthenticationPrincipal User user, @PathVariable String encodedUrl) {
+        Long id = null;
         Quiz quiz = null;
         try {
+            id = Long.valueOf(urlEncoder.decode(encodedUrl));
             quiz = this.quizService.getQuiz(id);
         } catch (Exception e) {
-            ApiError error = new ApiError(HttpStatus.BAD_REQUEST, "Can not the quiz.");
+            ApiError error = new ApiError(HttpStatus.BAD_REQUEST, "Can not find the quiz.");
             return new ResponseEntity<>(error, error.getStatus());
         }
         if (user.getId() != quiz.getUserId()) {

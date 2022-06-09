@@ -1,7 +1,6 @@
-package com.vvt.quizengine.jwtutils;
+package com.vvt.quizengine.utils;
 
 import java.io.Serializable;
-import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;

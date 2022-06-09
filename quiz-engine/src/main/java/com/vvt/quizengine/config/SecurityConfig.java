@@ -1,7 +1,7 @@
 package com.vvt.quizengine.config;
 
-import com.vvt.quizengine.jwtutils.JwtAuthenticationEntryPoint;
-import com.vvt.quizengine.jwtutils.JwtFilter;
+import com.vvt.quizengine.utils.JwtAuthenticationEntryPoint;
+import com.vvt.quizengine.utils.JwtFilter;
 import com.vvt.quizengine.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;

@@ -1,8 +1,8 @@
 package com.vvt.quizengine.controller;
 
 import com.vvt.quizengine.dto.UserDTO;
-import com.vvt.quizengine.jwtutils.TokenManager;
-import com.vvt.quizengine.jwtutils.Token;
+import com.vvt.quizengine.utils.TokenManager;
+import com.vvt.quizengine.utils.Token;
 import com.vvt.quizengine.model.User;
 import com.vvt.quizengine.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;

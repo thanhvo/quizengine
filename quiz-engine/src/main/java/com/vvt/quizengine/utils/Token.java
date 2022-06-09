@@ -1,4 +1,4 @@
-package com.vvt.quizengine.jwtutils;
+package com.vvt.quizengine.utils;
 
 import java.io.Serializable;
 
