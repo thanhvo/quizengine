@@ -23,5 +23,7 @@ public interface QuizService {
 
     public void deleteQuiz(Long id);
 
-    public Double caculateScore(Response response);
+    public Double caculateScore(Response response) throws Exception;
+
+    public Long getQuestions(Long quizId);
 }

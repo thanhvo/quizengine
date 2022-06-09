@@ -62,7 +62,13 @@ public class SolutionController {
                     .answerIds(responseDto.getAnswerIds())
                     .build();
 
-            Double score = this.quizService.caculateScore(response);
+            Double score = null;
+            try {
+                score = this.quizService.caculateScore(response);
+            } catch (Exception e) {
+                ApiError error = new ApiError(HttpStatus.BAD_REQUEST, "Can not caculate the score.");
+                return new ResponseEntity<>(error, error.getStatus());
+            }
             subScores.add(score);
             totalScore += score;
             response = this.quizService.update(response);
@@ -70,7 +76,8 @@ public class SolutionController {
         }
         solution.setTotalScore(totalScore);
         this.quizService.update(solution);
-        ScoreDTO scoreDto = new ScoreDTO(totalScore, subScores);
+        int percentage = (int)(totalScore / this.quizService.getQuestions(quiz.getId()) * 100);
+        ScoreDTO scoreDto = new ScoreDTO(percentage + "%", subScores);
         return new ResponseEntity<>(scoreDto, HttpStatus.CREATED);
     }
 }

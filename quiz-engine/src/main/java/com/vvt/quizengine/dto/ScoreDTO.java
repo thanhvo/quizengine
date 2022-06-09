@@ -8,11 +8,11 @@ import java.util.List;
 
 @Setter @Getter @NoArgsConstructor
 public class ScoreDTO {
-    private Double totalScore;
+    private String totalScore;
 
     private List<Double> subScores;
 
-    public ScoreDTO(Double totalScore, List<Double> subScores) {
+    public ScoreDTO(String totalScore, List<Double> subScores) {
         this.totalScore = totalScore;
         this.subScores = subScores;
     }

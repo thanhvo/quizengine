@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import javax.persistence.Column;
+import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -22,16 +24,15 @@ public class Response {
 
     private Long solutionId;
 
+    @Column
+    @Convert(converter = ListToStringConverter.class)
     private List<Long> answerIds;
 
-    private Double score;
-
     @Builder
-    public Response(Long questionId, Long solutionId, List<Long> answerIds, Double score) {
+    public Response(Long questionId, Long solutionId, List<Long> answerIds) {
         this.questionId = questionId;
         this.solutionId = solutionId;
         this.answerIds = answerIds;
-        this.score = score;
     }
 
 }

@@ -67,22 +67,34 @@ public class QuizServiceImpl implements QuizService{
         quizRepository.deleteById(id);
     }
 
-    private Integer getWrongAnswerNumber(Long quizId) {
-        return 0;
+    private Long getWrongAnswers(Long questionId) {
+        return answerRepository.getWrongAnswers(questionId);
     }
 
-    private Integer getRightAnswerNumber(Quiz quiz) {
-        return 0;
+    private Long getCorrectAnswers(Long questionID) {
+        return answerRepository.getCorrectAnswers(questionID);
     }
 
     @Override
-    public Double caculateScore(Response response) {
-        Double score = 0.0;
+    public Double caculateScore(Response response) throws Exception {
+        int correctReponses = 0, wrongResponses = 0;
+        int wrongAnswers = getWrongAnswers(response.getQuestionId()).intValue();
+        int correctAnswers = (int)getCorrectAnswers(response.getQuestionId()).intValue();
         for (Long answerId: response.getAnswerIds() ) {
-            //Answer answer = this.answerRepository.findById(answerId);
-
+            Answer answer = this.answerRepository.findById(answerId)
+                    .orElseThrow(() -> new Exception("Answer not found!"));
+            if (answer.getCorrect()) {
+                correctReponses++;
+            } else {
+                wrongResponses++;
+            }
         }
-        return score;
+        return (double) correctReponses / correctAnswers - (double) wrongResponses / wrongAnswers;
+    }
+
+    @Override
+    public Long getQuestions(Long quizId) {
+        return questionRepository.getQuestions(quizId);
     }
 
 }
