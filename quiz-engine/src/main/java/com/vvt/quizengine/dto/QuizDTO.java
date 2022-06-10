@@ -7,4 +7,8 @@ import lombok.Setter;
 @Setter @Getter @NoArgsConstructor
 public class QuizDTO {
     private String title;
+
+    public QuizDTO(String title) {
+        this.title = title;
+    }
 }

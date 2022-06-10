@@ -1,4 +1,4 @@
-package com.vvt.quizengine.rest;
+package com.vvt.quizengine.api;
 
 import com.vvt.quizengine.dto.UserDTO;
 import org.junit.jupiter.api.Test;
