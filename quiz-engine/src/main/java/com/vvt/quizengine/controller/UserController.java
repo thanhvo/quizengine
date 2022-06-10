@@ -1,6 +1,7 @@
 package com.vvt.quizengine.controller;
 
 import com.vvt.quizengine.dto.UserDTO;
+import com.vvt.quizengine.exception.ApiError;
 import com.vvt.quizengine.utils.TokenManager;
 import com.vvt.quizengine.utils.Token;
 import com.vvt.quizengine.model.User;
@@ -21,6 +22,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.regex.Pattern;
 
 @RestController
 @RequestMapping("/users")
@@ -48,18 +51,26 @@ public class UserController {
         return userService.getUser(id);
     }
 
+    private boolean isValidEmail(String email) {
+        String regexPattern = "^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$";
+        return Pattern.compile(regexPattern).matcher(email).matches();
+    }
+
     @PostMapping(path = "/login")
-    public ResponseEntity<Token> login(@RequestBody UserDTO userDto) throws Exception {
+    public ResponseEntity<Object> login(@RequestBody UserDTO userDto) {
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(userDto.getEmail(), userDto.getPassword())
             );
         } catch (DisabledException e) {
-            throw new Exception("USER_DISABLED", e);
+            ApiError error = new ApiError(HttpStatus.BAD_REQUEST, "The user is disabled.");
+            return new ResponseEntity<Object>(error, error.getStatus());
         } catch (BadCredentialsException e) {
-            throw new Exception("INVALID_CREDENTIALS", e);
+            ApiError error = new ApiError(HttpStatus.BAD_REQUEST, "Bad Credential.");
+            return new ResponseEntity<Object>(error, error.getStatus());
         } catch (Exception e) {
-            throw e;
+            ApiError error = new ApiError(HttpStatus.BAD_REQUEST, e.getMessage());
+            return new ResponseEntity<Object>(error, error.getStatus());
         }
         final UserDetails user = userService.loadUserByUsername(userDto.getEmail());
         final String jwtToken = tokenManager.generateJwtToken(user);
@@ -67,12 +78,23 @@ public class UserController {
     }
 
     @PostMapping(path = "/register")
-    public ResponseEntity<Token> register(@RequestBody UserDTO userDto) {
-        User user = User.builder()
-                .email(userDto.getEmail())
-                .password(passwordEncoder.encode(userDto.getPassword()))
-                .build();
-        userService.update(user);
+    public ResponseEntity<Object> register(@RequestBody UserDTO userDto) {
+        User user = null;
+        try {
+            String email = userDto.getEmail();
+            if (!isValidEmail(email)) {
+                ApiError error = new ApiError(HttpStatus.BAD_REQUEST, "The email is invalid.");
+                return new ResponseEntity<Object>(error, error.getStatus());
+            }
+            user = User.builder()
+                    .email(email)
+                    .password(passwordEncoder.encode(userDto.getPassword()))
+                    .build();
+            userService.update(user);
+        } catch (Exception ex) {
+            ApiError error = new ApiError(HttpStatus.BAD_REQUEST, ex.getMessage());
+            return new ResponseEntity<Object>(error, error.getStatus());
+        }
         final String jwtToken = tokenManager.generateJwtToken(user);
         return new ResponseEntity(new Token(jwtToken), HttpStatus.CREATED);
     }

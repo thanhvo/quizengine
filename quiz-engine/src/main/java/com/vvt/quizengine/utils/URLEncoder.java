@@ -10,8 +10,7 @@ import java.nio.charset.StandardCharsets;
 public class URLEncoder {
 
     public String encode(String path) throws UnsupportedEncodingException {
-        byte[] pathBytes = path.getBytes(StandardCharsets.UTF_8);
-        return Base64Utils.encodeToString(pathBytes);
+        return Base64Utils.encodeToString(path.getBytes(StandardCharsets.UTF_8));
     }
 
     public String decode(String encodedPath) {
