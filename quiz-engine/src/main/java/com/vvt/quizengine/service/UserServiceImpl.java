@@ -32,6 +32,11 @@ public class UserServiceImpl implements UserService{
     }
 
     @Override
+    public void delete(User user) {
+        userRepository.delete(user);
+    }
+
+    @Override
     public User loadUserByUsername(String email) throws UsernameNotFoundException{
         User user = userRepository.findByEmail(email);
         if (user == null) throw new UsernameNotFoundException(email);

@@ -38,22 +38,13 @@ public class QuizController {
 
     @PostMapping(value = {""})
     public ResponseEntity<Object> create(@AuthenticationPrincipal User user, @RequestBody QuizDTO quizDTO) {
-        Quiz quiz = Quiz.builder()
-                .userId(user.getId())
-                .status(QuizStatus.CREATED)
-                .title(quizDTO.getTitle())
-                .build();
-        quiz = this.quizService.update(quiz);
-        Long id = quiz.getId();
-        String encodedUrl = null;
+        Quiz quiz = null;
         try {
-            encodedUrl = urlEncoder.encode(id.toString());
-        } catch (UnsupportedEncodingException e) {
-            ApiError error = new ApiError(HttpStatus.BAD_REQUEST, "Can not encode the path.");
+            quiz = this.quizService.createQuiz(user.getId(), quizDTO);
+        } catch (Exception e) {
+            ApiError error = new ApiError(HttpStatus.BAD_REQUEST, e.getMessage());
             return new ResponseEntity<>(error, error.getStatus());
         }
-        quiz.setEncodedUrl(encodedUrl);
-        quiz = this.quizService.update(quiz);
         return new ResponseEntity<>(quiz, HttpStatus.CREATED);
     }
 
@@ -74,29 +65,7 @@ public class QuizController {
             return new ResponseEntity<Object>(error, error.getStatus());
         }
         quiz.setStatus(QuizStatus.MODIFIED);
-
-        Question question = Question.builder()
-                .quizId(questionDTO.getQuizId())
-                .text(questionDTO.getText())
-                .type(questionDTO.getType())
-                .build();
-        question = this.quizService.update(question);
-        List<Answer> answers = new ArrayList<Answer>();
-        for (AnswerDTO answerDto: questionDTO.getAnswers()) {
-            Answer answer = Answer.builder()
-                    .questionId(question.getId())
-                    .value(answerDto.getValue())
-                    .correct(answerDto.getCorrect())
-                    .build();
-            answer = this.quizService.update(answer);
-            answers.add(answer);
-        }
-        question.setAnswers(answers);
-        question = this.quizService.update(question);
-
-        quiz.addQuestion(question);
-        this.quizService.update(quiz);
-
+        Question question = quizService.addQuestion(quiz, questionDTO);
         return new ResponseEntity<>(question, HttpStatus.CREATED);
     }
 

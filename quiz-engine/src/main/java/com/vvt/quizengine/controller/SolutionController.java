@@ -10,6 +10,7 @@ import com.vvt.quizengine.model.Response;
 import com.vvt.quizengine.model.Solution;
 import com.vvt.quizengine.model.User;
 import com.vvt.quizengine.service.QuizService;
+import com.vvt.quizengine.service.SolutionService;
 import com.vvt.quizengine.utils.URLEncoder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -24,10 +25,14 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/solutions")
 public class SolutionController {
+
+    @Autowired
+    private SolutionService solutionService;
 
     @Autowired
     private QuizService quizService;
@@ -48,47 +53,23 @@ public class SolutionController {
             ApiError error = new ApiError(HttpStatus.FORBIDDEN, "Can take the quiz which is not yet published.");
             return new ResponseEntity<Object>(error, error.getStatus());
         }
-
-        Solution solution = Solution.builder()
-                .userId(user.getId())
-                .quizId(quiz.getId())
-                .build();
-        solution = this.quizService.update(solution);
-
-        List<Response> responses = new ArrayList<Response>();
-        Double totalScore = 0.0;
-        List<Double> subScores = new ArrayList<>();
-        for (ResponseDTO responseDto : solutionDTO.getResponses()) {
-            Response response = Response.builder()
-                    .solutionId(solution.getId())
-                    .questionId(responseDto.getQuestionId())
-                    .answerIds(responseDto.getAnswerIds())
-                    .build();
-
-            Double score = null;
-            try {
-                score = this.quizService.caculateScore(response);
-            } catch (Exception e) {
-                ApiError error = new ApiError(HttpStatus.BAD_REQUEST, "Can not caculate the score.");
-                return new ResponseEntity<>(error, error.getStatus());
-            }
-            subScores.add(score);
-            totalScore += score;
-            response.setScore(score);
-            response = this.quizService.update(response);
-            responses.add(response);
+        Solution solution = null;
+        try {
+            solution = solutionService.createSolution(user.getId(), solutionDTO);
+        } catch (Exception ex) {
+            ApiError error = new ApiError(HttpStatus.BAD_REQUEST, ex.getMessage());
+            return new ResponseEntity<>(error, error.getStatus());
         }
-
-        int percentage = (int)(totalScore / this.quizService.getQuestions(quiz.getId()) * 100);
-        solution.setTotalScore(percentage);
-        this.quizService.update(solution);
-        ScoreDTO scoreDto = new ScoreDTO(percentage + "%", subScores);
+        ScoreDTO scoreDto = new ScoreDTO(solution.getTotalScore() + "%",
+                solution.getReponses().stream().map(response -> response.getScore())
+                        .collect(Collectors.toList())
+        );
         return new ResponseEntity<>(scoreDto, HttpStatus.CREATED);
     }
 
     @GetMapping(value = {"", "/"})
     public Iterable<Solution> getSolutions(@AuthenticationPrincipal User user) {
-        return this.quizService.getSolutions(user.getId());
+        return this.solutionService.getSolutions(user.getId());
     }
 
     @GetMapping(value = {"/byQuiz/{encodedUrl}"})
@@ -106,7 +87,7 @@ public class SolutionController {
             ApiError error = new ApiError(HttpStatus.FORBIDDEN, "Can not access the solution of the quiz owned by other.");
             return new ResponseEntity<>(error, error.getStatus());
         }
-        List<Solution> solutions = this.quizService.getSolutionsByQuizId(id);
+        List<Solution> solutions = this.solutionService.getSolutionsByQuizId(id);
         return new ResponseEntity<>(solutions, HttpStatus.OK);
     }
 }

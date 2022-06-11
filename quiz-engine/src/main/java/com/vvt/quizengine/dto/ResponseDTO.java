@@ -11,4 +11,9 @@ public class ResponseDTO {
     private Long questionId;
 
     private List<Long> answerIds;
+
+    public ResponseDTO(Long questionId, List<Long> answerIds) {
+        this.questionId = questionId;
+        this.answerIds = answerIds;
+    }
 }

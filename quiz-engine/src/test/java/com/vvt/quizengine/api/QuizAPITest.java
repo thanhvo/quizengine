@@ -6,7 +6,6 @@ import com.vvt.quizengine.api.data.UserTestDataFactory;
 import com.vvt.quizengine.dto.AnswerDTO;
 import com.vvt.quizengine.dto.QuestionDTO;
 import com.vvt.quizengine.dto.QuizDTO;
-import com.vvt.quizengine.dto.UserDTO;
 import com.vvt.quizengine.model.QuestionType;
 import com.vvt.quizengine.model.Quiz;
 import com.vvt.quizengine.model.User;
@@ -23,8 +22,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
-
 import static com.vvt.quizengine.utils.JsonHelper.toJson;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -36,10 +33,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WithMockUser
 public class QuizAPITest {
     @Autowired
-    private TestRestTemplate restTemplate;
+    private MockMvc mockMvc;
 
     @Autowired
-    private MockMvc mockMvc;
+    private TestRestTemplate testRestTemplate;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -54,17 +51,25 @@ public class QuizAPITest {
 
     private static final String USER2_NAME = "tester2@abc.com";
 
+    private static final String PASSWORD = "password";
+
     @BeforeAll
     public void init() {
-        restTemplate.postForEntity("/users/register",
-                new UserDTO(USER1_NAME, "password"), Object.class);
-        restTemplate.postForEntity("/users/register",
-                new UserDTO(USER2_NAME, "password"), Object.class);
+        try {
+            User user = userTestDataFactory.getUser(USER1_NAME);
+        } catch( Exception ex) {
+            userTestDataFactory.createUser(USER1_NAME, PASSWORD);
+        }
+        try {
+            User user = userTestDataFactory.getUser(USER2_NAME);
+        } catch( Exception ex) {
+            userTestDataFactory.createUser(USER2_NAME, PASSWORD);
+        }
     }
 
     @Test
     public void unauthorizedCreateQuizRequest() {
-        ResponseEntity<Object> quizResponse = restTemplate.postForEntity("/quizzes/",
+        ResponseEntity<Object> quizResponse = testRestTemplate.postForEntity("/quizzes/",
                 new QuizDTO("A random quiz."), Object.class);
         assertThat(quizResponse.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
     }

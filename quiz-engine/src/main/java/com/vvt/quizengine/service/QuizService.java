@@ -1,5 +1,7 @@
 package com.vvt.quizengine.service;
 
+import com.vvt.quizengine.dto.QuestionDTO;
+import com.vvt.quizengine.dto.QuizDTO;
 import com.vvt.quizengine.model.Answer;
 import com.vvt.quizengine.model.Question;
 import com.vvt.quizengine.model.Quiz;
@@ -11,6 +13,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import java.util.List;
 
 public interface QuizService {
+    public Quiz createQuiz(Long userId, QuizDTO quizDTO) throws Exception;
+
     public Quiz getQuiz(long id) throws Exception;
 
     public Quiz update(Quiz quiz);
@@ -19,17 +23,17 @@ public interface QuizService {
 
     public Answer update(Answer answer);
 
-    public Solution update(Solution solution);
-
-    public Response update(Response response);
-
     public void deleteQuiz(Long id);
-
-    public Double caculateScore(Response response) throws Exception;
 
     public Long getQuestions(Long quizId);
 
-    public List<Solution> getSolutions(Long userId);
+    public Question addQuestion(Quiz quiz, QuestionDTO questionDTO);
 
-    public List<Solution> getSolutionsByQuizId(Long quizId);
+    public Long getWrongAnswers(Long questionId);
+
+    public Long getCorrectAnswers(Long questionId);
+
+    public List<Long> getCorrectAnswerList(Long questionId);
+
+    public List<Long> getWrongAnswerList(Long questionId);
 }

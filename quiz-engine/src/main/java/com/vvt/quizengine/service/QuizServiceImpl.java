@@ -1,18 +1,20 @@
 package com.vvt.quizengine.service;
 
+import com.vvt.quizengine.dto.AnswerDTO;
+import com.vvt.quizengine.dto.QuestionDTO;
+import com.vvt.quizengine.dto.QuizDTO;
 import com.vvt.quizengine.model.Answer;
 import com.vvt.quizengine.model.Question;
 import com.vvt.quizengine.model.Quiz;
-import com.vvt.quizengine.model.Response;
-import com.vvt.quizengine.model.Solution;
+import com.vvt.quizengine.model.QuizStatus;
 import com.vvt.quizengine.repository.AnswerRepository;
 import com.vvt.quizengine.repository.QuestionRepository;
 import com.vvt.quizengine.repository.QuizRepository;
-import com.vvt.quizengine.repository.ResponseRepository;
-import com.vvt.quizengine.repository.SolutionRepository;
+import com.vvt.quizengine.utils.URLEncoder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -27,10 +29,21 @@ public class QuizServiceImpl implements QuizService{
     private AnswerRepository answerRepository;
 
     @Autowired
-    private SolutionRepository solutionRepository;
+    private URLEncoder urlEncoder;
 
-    @Autowired
-    private ResponseRepository responseRepository;
+    @Override
+    public Quiz createQuiz(Long userId, QuizDTO quizDTO) throws Exception {
+        Quiz quiz = Quiz.builder()
+                .userId(userId)
+                .status(QuizStatus.CREATED)
+                .title(quizDTO.getTitle())
+                .build();
+        quiz = update(quiz);
+        Long id = quiz.getId();
+        String encodedUrl = urlEncoder.encode(id.toString());
+        quiz.setEncodedUrl(encodedUrl);
+        return update(quiz);
+    }
 
     @Override
     public Quiz getQuiz(long id) throws Exception {
@@ -55,43 +68,27 @@ public class QuizServiceImpl implements QuizService{
     }
 
     @Override
-    public Solution update(Solution solution) {
-        return solutionRepository.save(solution);
-    }
-
-    @Override
-    public Response update(Response response) {
-        return responseRepository.save(response);
-    }
-
-    @Override
     public void deleteQuiz(Long id) {
         quizRepository.deleteById(id);
     }
 
-    private Long getWrongAnswers(Long questionId) {
+    public Long getWrongAnswers(Long questionId) {
         return answerRepository.getWrongAnswers(questionId);
     }
 
-    private Long getCorrectAnswers(Long questionID) {
+    @Override
+    public Long getCorrectAnswers(Long questionID) {
         return answerRepository.getCorrectAnswers(questionID);
     }
 
     @Override
-    public Double caculateScore(Response response) throws Exception {
-        int correctReponses = 0, wrongResponses = 0;
-        int wrongAnswers = getWrongAnswers(response.getQuestionId()).intValue();
-        int correctAnswers = (int)getCorrectAnswers(response.getQuestionId()).intValue();
-        for (Long answerId: response.getAnswerIds() ) {
-            Answer answer = this.answerRepository.findById(answerId)
-                    .orElseThrow(() -> new Exception("Answer not found!"));
-            if (answer.getCorrect()) {
-                correctReponses++;
-            } else {
-                wrongResponses++;
-            }
-        }
-        return (double) correctReponses / correctAnswers - (double) wrongResponses / wrongAnswers;
+    public List<Long> getCorrectAnswerList(Long questionId) {
+        return answerRepository.getCorrectAnswerList(questionId);
+    }
+
+    @Override
+    public List<Long> getWrongAnswerList(Long questionId) {
+        return answerRepository.getWrongAnswerList(questionId);
     }
 
     @Override
@@ -100,14 +97,29 @@ public class QuizServiceImpl implements QuizService{
     }
 
     @Override
-    public List<Solution> getSolutions(Long userId) {
-        return solutionRepository.getSolutions(userId);
-    }
+    public Question addQuestion(Quiz quiz, QuestionDTO questionDTO) {
+        Question question = Question.builder()
+                .quizId(questionDTO.getQuizId())
+                .text(questionDTO.getText())
+                .type(questionDTO.getType())
+                .build();
+        question = update(question);
+        List<Answer> answers = new ArrayList<Answer>();
+        for (AnswerDTO answerDto: questionDTO.getAnswers()) {
+            Answer answer = Answer.builder()
+                    .questionId(question.getId())
+                    .value(answerDto.getValue())
+                    .correct(answerDto.getCorrect())
+                    .build();
+            answer = update(answer);
+            answers.add(answer);
+        }
+        question.setAnswers(answers);
+        question = update(question);
 
-    @Override
-    public List<Solution> getSolutionsByQuizId(Long quizId) {
-        return solutionRepository.getSolutionsByQuizId(quizId);
+        quiz.addQuestion(question);
+        update(quiz);
+        return question;
     }
-
 
 }

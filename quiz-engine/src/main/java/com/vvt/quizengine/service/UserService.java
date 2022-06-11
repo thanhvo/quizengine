@@ -6,9 +6,11 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 public interface UserService extends UserDetailsService {
 
-    Iterable<User> getAllUsers();
+    public Iterable<User> getAllUsers();
 
-    User getUser(long id) throws UsernameNotFoundException;
+    public User getUser(long id) throws UsernameNotFoundException;
 
-    User update(User user);
+    public User update(User user);
+
+    public void delete(User user);
 }
