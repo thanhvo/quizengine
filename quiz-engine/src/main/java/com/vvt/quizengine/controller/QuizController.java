@@ -43,7 +43,7 @@ public class QuizController {
                 .status(QuizStatus.CREATED)
                 .title(quizDTO.getTitle())
                 .build();
-        this.quizService.update(quiz);
+        quiz = this.quizService.update(quiz);
         Long id = quiz.getId();
         String encodedUrl = null;
         try {

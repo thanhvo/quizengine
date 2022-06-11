@@ -1,9 +1,15 @@
 package com.vvt.quizengine.api;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.vvt.quizengine.api.data.QuizTestDataFactory;
+import com.vvt.quizengine.api.data.UserTestDataFactory;
+import com.vvt.quizengine.dto.AnswerDTO;
+import com.vvt.quizengine.dto.QuestionDTO;
 import com.vvt.quizengine.dto.QuizDTO;
 import com.vvt.quizengine.dto.UserDTO;
+import com.vvt.quizengine.model.QuestionType;
+import com.vvt.quizengine.model.Quiz;
+import com.vvt.quizengine.model.User;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -38,12 +44,22 @@ public class QuizAPITest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private QuizTestDataFactory quizTestDataFactory;
+
+    @Autowired
+    private UserTestDataFactory userTestDataFactory;
+
+    private static final String USER1_NAME = "tester1@abc.com";
+
+    private static final String USER2_NAME = "tester2@abc.com";
+
     @BeforeAll
     public void init() {
         restTemplate.postForEntity("/users/register",
-                new UserDTO("tester1@abc.com", "password"), Object.class);
+                new UserDTO(USER1_NAME, "password"), Object.class);
         restTemplate.postForEntity("/users/register",
-                new UserDTO("tester2@abc.com", "password"), Object.class);
+                new UserDTO(USER2_NAME, "password"), Object.class);
     }
 
     @Test
@@ -54,14 +70,95 @@ public class QuizAPITest {
     }
 
     @Test
-    @WithUserDetails("tester1@abc.com")
+    @WithUserDetails(USER1_NAME)
     public void canCreateQuizRequest() throws Exception {
         QuizDTO quizDTO = new QuizDTO("A random quiz.");
-        MvcResult quizResponse = this.mockMvc
+        this.mockMvc
                 .perform(post("/quizzes/")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(toJson(objectMapper, quizDTO)))
                 .andExpect(status().isCreated())
+                .andReturn();
+    }
+
+    @Test
+    @WithUserDetails(USER1_NAME)
+    public void addSingleQuestion() throws Exception {
+        QuizDTO quizDTO = new QuizDTO("A simple quiz");
+        User user = userTestDataFactory.getUser(USER1_NAME);
+        Quiz quiz = quizTestDataFactory.createQuiz(user.getId(), quizDTO);
+        QuestionDTO question = QuestionDTO.builder()
+                .quizId(quiz.getId())
+                .text("Moon is a star?")
+                .type(QuestionType.SINGLE)
+                .build();
+        question.addAnswer(new AnswerDTO("Yes", true));
+        question.addAnswer(new AnswerDTO("No", false));
+        this.mockMvc
+                .perform(post("/quizzes/addQuestion")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJson(objectMapper, question)))
+                .andExpect(status().isCreated())
+                .andReturn();
+    }
+
+    @Test
+    @WithUserDetails(USER1_NAME)
+    public void addMultipleQuestion() throws Exception {
+        QuizDTO quizDTO = new QuizDTO("A simple quiz");
+        User user = userTestDataFactory.getUser(USER1_NAME);
+        Quiz quiz = quizTestDataFactory.createQuiz(user.getId(), quizDTO);
+        QuestionDTO question = QuestionDTO.builder()
+                .quizId(quiz.getId())
+                .text("Temperature can be measured in?")
+                .type(QuestionType.MULTIPLE)
+                .build();
+        question.addAnswer(new AnswerDTO("Kelvin", true));
+        question.addAnswer(new AnswerDTO("Fahrenheit", true));
+        question.addAnswer(new AnswerDTO("Gram", false));
+        question.addAnswer(new AnswerDTO("Celsius", true));
+        question.addAnswer(new AnswerDTO("Liters", false));
+        this.mockMvc
+                .perform(post("/quizzes/addQuestion")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(toJson(objectMapper, question)))
+                .andExpect(status().isCreated())
+                .andReturn();
+    }
+
+    @Test
+    @WithUserDetails(USER1_NAME)
+    public void canPublishQuiz() throws Exception {
+        QuizDTO quizDTO = new QuizDTO("A simple quiz");
+        User user = userTestDataFactory.getUser(USER1_NAME);
+        Quiz quiz = quizTestDataFactory.createQuiz(user.getId(), quizDTO);
+        this.mockMvc
+                .perform(post("/quizzes/publish/" + quiz.getEncodedUrl()))
+                .andExpect(status().isOk())
+                .andReturn();
+    }
+
+    @Test
+    @WithUserDetails(USER1_NAME)
+    public void cannotPublishQuizWithID() throws Exception {
+        QuizDTO quizDTO = new QuizDTO("A simple quiz");
+        User user = userTestDataFactory.getUser(USER1_NAME);
+        Quiz quiz = quizTestDataFactory.createQuiz(user.getId(), quizDTO);
+        this.mockMvc
+                .perform(post("/quizzes/publish/" + quiz.getId()))
+                .andExpect(status().isBadRequest())
+                .andReturn();
+    }
+
+    @Test
+    @WithUserDetails(USER1_NAME)
+    public void cannotPublishOthersQuiz() throws Exception {
+        QuizDTO quizDTO = new QuizDTO("A simple quiz");
+        User user = userTestDataFactory.getUser(USER2_NAME);
+        Quiz quiz = quizTestDataFactory.createQuiz(user.getId(), quizDTO);
+        this.mockMvc
+                .perform(post("/quizzes/publish/" + quiz.getEncodedUrl()))
+                .andExpect(status().isForbidden())
                 .andReturn();
     }
 }
