@@ -21,7 +21,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.web.servlet.MockMvc;
@@ -32,8 +34,10 @@ import java.util.List;
 
 import static com.vvt.quizengine.utils.JsonHelper.fromJson;
 import static com.vvt.quizengine.utils.JsonHelper.toJson;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -173,6 +177,39 @@ public class SolutionAPITest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(toJson(objectMapper, solution)))
                 .andExpect(status().isBadRequest())
+                .andReturn();
+    }
+
+    @Test
+    @WithUserDetails(USER1_NAME)
+    public void canGetSolutions() throws Exception {
+        this.mockMvc
+                .perform(get("/solutions/"))
+                .andExpect(status().isOk())
+                .andReturn();
+    }
+
+    @Test
+    public void unauthorizedGetSolutionRequest() {
+        ResponseEntity<Object> solutionResponse = testRestTemplate.getForEntity("/solutions/", Object.class);
+        assertThat(solutionResponse.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
+    @WithUserDetails(USER1_NAME)
+    public void canGetSolutionsByQuiz() throws Exception {
+        this.mockMvc
+                .perform(get("/solutions/byQuiz/" + quiz.getEncodedUrl()))
+                .andExpect(status().isOk())
+                .andReturn();
+    }
+
+    @Test
+    @WithUserDetails(USER2_NAME)
+    public void cannotGetSolutionsByQuizOfOthers() throws Exception {
+        this.mockMvc
+                .perform(get("/solutions/byQuiz/" + quiz.getEncodedUrl()))
+                .andExpect(status().isForbidden())
                 .andReturn();
     }
 }
